@@ -1,8 +1,16 @@
 {
-    "functions": {
-      "api/**.py": {
-        "includeFiles": "bin/**"
+    "version": 2,
+    "builds": [
+      {
+        "src": "api/index.py",
+        "use": "@vercel/python"
       }
-    }
+    ],
+    "routes": [
+      {
+        "src": "/api/ffprobe",
+        "dest": "/api/index.py"
+      }
+    ]
   }
   
