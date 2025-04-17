@@ -1,4 +1,81 @@
 // /api/ffprobe.js
+
+import ffmpegPath from 'ffmpeg-static';
+import ffmpeg from 'fluent-ffmpeg';
+import { PassThrough } from 'stream';
+import ytdl from 'ytdl-core';
+
+export const config = {
+  api: {
+    bodyParser: false,
+  },
+};
+
+ffmpeg.setFfmpegPath(ffmpegPath);
+
+export default async function handler(req, res) {
+  const { url } = req.query;
+
+  if (!url) {
+    return res.status(400).json({ error: 'Missing ?url=...' });
+  }
+
+  try {
+    let videoStream;
+
+    if (url.includes('googlevideo.com')) {
+      const response = await fetch(url, {
+        headers: {
+          'User-Agent': 'Mozilla/5.0',
+          'Referer': 'https://www.youtube.com',
+        },
+      });
+
+      if (!response.ok) {
+        return res.status(403).json({ error: 'Failed to fetch GoogleVideo URL', status: response.status });
+      }
+
+      const buffer = await response.arrayBuffer();
+      videoStream = new PassThrough();
+      videoStream.end(Buffer.from(buffer));
+    } else if (ytdl.validateURL(url)) {
+      videoStream = ytdl(url, { quality: 'highestvideo' });
+    } else {
+      return res.status(400).json({ error: 'Unsupported or invalid video URL' });
+    }
+
+    ffmpeg(videoStream).ffprobe((err, data) => {
+      if (err) {
+        console.error('[ffprobe error]', err);
+        return res.status(500).json({ error: 'ffprobe failed', details: err.message });
+      }
+
+      const video = data.streams.find(s => s.codec_type === 'video');
+      if (!video) {
+        return res.status(404).json({ error: 'No video stream found' });
+      }
+
+      const profile = String(video.profile || '00').padStart(2, '0');
+      const level = String(video.level || '00').padStart(2, '0');
+      const bitDepth = String(video.bits_per_raw_sample || '08').padStart(2, '0');
+      const fullCodec = `vp09.${profile}.${level}.${bitDepth}`;
+
+      return res.status(200).json({
+        codec_name: video.codec_name,
+        profile: video.profile,
+        level: video.level,
+        bitDepth: video.bits_per_raw_sample,
+        fullCodec,
+      });
+    });
+  } catch (error) {
+    console.error('[Handler error]', error);
+    return res.status(500).json({ error: 'Internal Server Error', details: error.message });
+  }
+}
+
+
+/*
 import ffmpegPath from 'ffmpeg-static';
 import ffmpeg from 'fluent-ffmpeg';
 import { writeFile, readFile, unlink } from 'fs/promises';
@@ -57,7 +134,7 @@ export default async function handler(req, res) {
   }
 }
 
-
+*/
 
 /*
 import { spawn } from "child_process";
