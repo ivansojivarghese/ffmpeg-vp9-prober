@@ -1,19 +1,17 @@
 {
-  "name": "ffmpeg-api",
+  "name": "youtube-analyzer",
   "version": "1.0.0",
-  "description": "A simple API to trim videos using ffmpeg",
-  "main": "index.js",
+  "main": "api/ffprobe.js", 
+  "type": "module",  
   "scripts": {
-    "start": "node server.js"
+    "start": "node api/ffprobe.js" 
   },
   "dependencies": {
-    "ffmpeg-static": "^4.4.1",
-    "fluent-ffmpeg": "^2.1.3",
-    "fs": "0.0.1-security",
-    "os": "^0.1.1",
-    "ytdl-core": "^4.11.5"
+    "express": "^4.17.1",  
+    "ffmpeg-static": "^4.4.0",
+    "fluent-ffmpeg": "^2.1.2"
   },
   "engines": {
-    "node": ">=18"
+    "node": "18.x"
   }
 }

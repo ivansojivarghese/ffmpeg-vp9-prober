@@ -1,5 +1,89 @@
-// /api/ffprobe.js
 
+import { exec } from 'child_process';
+import { promisify } from 'util';
+
+const execAsync = promisify(exec);
+
+export const config = {
+  runtime: 'nodejs', // This might not be required if you're running as a normal Node server
+};
+
+export default async function handler(req, res) {
+  // Check if the method is POST
+  if (req.method !== 'POST') {
+    return res.status(405).json({ error: 'Method not allowed' });
+  }
+
+  // Ensure a URL is provided in the request body
+  const { url } = req.body;
+
+  if (!url) {
+    return res.status(400).json({ error: 'Missing YouTube URL' });
+  }
+
+  try {
+    // Run yt-dlp to fetch video format details
+    const { stdout } = await execAsync(`yt-dlp -F "${url}" --print-json`);
+
+    const data = JSON.parse(stdout);
+
+    // Extract relevant format details
+    const formats = data.formats.map(f => ({
+      format_id: f.format_id,
+      ext: f.ext,
+      acodec: f.acodec,  // Audio codec
+      vcodec: f.vcodec,  // Video codec
+      format_note: f.format_note, // Additional format info (e.g., audio only, 1080p)
+      resolution: f.resolution, // Video resolution
+    }));
+
+    // Return the video title and available formats
+    res.status(200).json({ title: data.title, formats });
+  } catch (err) {
+    // Catch errors, such as yt-dlp failing or invalid URL
+    res.status(500).json({ error: 'Failed to fetch codec details', details: err.message });
+  }
+}
+
+
+/*
+import { exec } from 'child_process';
+
+const getVideoCodecInfo = (url) => {
+  return new Promise((resolve, reject) => {
+    exec(`yt-dlp -j ${url}`, (error, stdout, stderr) => {
+      if (error) {
+        return reject(`Error: ${stderr}`);
+      }
+
+      try {
+        const videoInfo = JSON.parse(stdout);
+        const vp9Stream = videoInfo.formats.find(f => f.vcodec === 'vp9');
+        resolve(vp9Stream);
+      } catch (err) {
+        reject('Failed to parse video info');
+      }
+    });
+  });
+};
+
+export default async function handler(req, res) {
+  const { url } = req.query;
+
+  if (!url) {
+    return res.status(400).json({ error: 'Missing video URL' });
+  }
+
+  try {
+    const codecDetails = await getVideoCodecInfo(url);
+    res.json(codecDetails);
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to fetch codec details', details: err });
+  }
+}
+*/
+
+/*
 import ffmpegPath from 'ffmpeg-static';
 import ffmpeg from 'fluent-ffmpeg';
 import { PassThrough } from 'stream';
@@ -25,17 +109,12 @@ export default async function handler(req, res) {
 
     if (url.includes('googlevideo.com')) {
       const response = await fetch(url, {
-        /*
-        headers: {
-          'User-Agent': 'Mozilla/5.0',
-          'Referer': 'https://www.youtube.com',
-        },*/
+
         headers: {
           'User-Agent':
             'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 ' +
             '(KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36',
           'Referer': 'https://www.youtube.com/',
-          'Accept': '*/*',
           'Accept-Language': 'en-US,en;q=0.9',
         }
       });
@@ -82,7 +161,7 @@ export default async function handler(req, res) {
     return res.status(500).json({ error: 'Internal Server Error', details: error.message });
   }
 }
-
+*/
 
 /*
 import ffmpegPath from 'ffmpeg-static';
