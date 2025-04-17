@@ -1,13 +1,8 @@
 {
   "name": "youtube-analyzer",
   "version": "1.0.0",
-  "main": "api/ffprobe.js", 
-  "type": "module",  
-  "scripts": {
-    "start": "node api/ffprobe.js" 
-  },
+  "type": "module",
   "dependencies": {
-    "express": "^4.17.1",  
     "ffmpeg-static": "^4.4.0",
     "fluent-ffmpeg": "^2.1.2"
   },
