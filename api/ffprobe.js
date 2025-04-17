@@ -1,5 +1,53 @@
 
+import path from 'path';
+import { exec } from 'child_process';
+import { promisify } from 'util';
 
+const execAsync = promisify(exec);
+
+export default async function handler(req, res) {
+  if (req.method !== 'POST') {
+    return res.status(405).json({ error: 'Method not allowed' });
+  }
+
+  const { url } = req.body || {};
+
+  if (!url) {
+    return res.status(400).json({ error: 'Missing YouTube URL' });
+  }
+
+  try {
+    const ytDlpPath = path.join(process.cwd(), 'bin', 'yt-dlp', 'yt-dlp');
+
+    // Ensure binary exists
+    if (!ytDlpPath || !ytDlpPath.endsWith('yt-dlp')) {
+      return res.status(500).json({ error: 'yt-dlp binary not found' });
+    }
+
+    const { stdout } = await execAsync(`${ytDlpPath} -F "${url}" --print-json`);
+    const data = JSON.parse(stdout);
+
+    const formats = data.formats.map(f => ({
+      format_id: f.format_id,
+      ext: f.ext,
+      acodec: f.acodec,
+      vcodec: f.vcodec,
+      format_note: f.format_note,
+      resolution: f.resolution,
+    }));
+
+    res.status(200).json({ title: data.title, formats });
+  } catch (err) {
+    res.status(500).json({
+      error: 'Failed to fetch codec details',
+      details: err.message,
+    });
+  }
+}
+
+
+
+/*
 import { exec } from 'child_process';
 import { promisify } from 'util';
 
@@ -38,7 +86,7 @@ export default async function handler(req, res) {
     });
   }
 }
-
+*/
 
 /*
 import ytdl from 'ytdl-core';
