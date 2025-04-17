@@ -1,4 +1,3 @@
-
 import { exec } from 'child_process';
 import { promisify } from 'util';
 import path from 'path';
@@ -17,11 +16,12 @@ export default async function handler(req, res) {
   }
 
   try {
-    // Pointing directly to bin/yt-dlp (binary is directly inside bin)
+    // Point to the local yt-dlp binary
     const ytDlpPath = path.join(process.cwd(), 'bin', 'yt-dlp');
+    const pythonPath = process.env.PYTHON_BIN || 'python3';  // Use environment variable for Python path
 
-    // Execute yt-dlp command
-    const { stdout } = await execAsync(`${ytDlpPath} -F "${url}" --print-json`);
+    // Use `python3` as a prefix to the yt-dlp command to run it with Python
+    const { stdout } = await execAsync(`${pythonPath} ${ytDlpPath} -F "${url}" --print-json`);
     const data = JSON.parse(stdout);
 
     const formats = data.formats.map(f => ({

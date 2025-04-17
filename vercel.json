@@ -1,8 +1,10 @@
 {
     "functions": {
       "api/ffprobe.js": {
-        "includeFiles": "bin/yt-dlp"
+        "includeFiles": "bin/**"
       }
+    },
+    "env": {
+      "PYTHON_BIN": "/opt/python3.8/bin/python3"  
     }
   }
-  
