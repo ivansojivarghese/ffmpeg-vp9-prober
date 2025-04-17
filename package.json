@@ -1,0 +1,19 @@
+{
+  "name": "ffmpeg-api",
+  "version": "1.0.0",
+  "description": "A simple API to trim videos using ffmpeg",
+  "main": "index.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "ffmpeg-static": "^4.4.0",
+    "fluent-ffmpeg": "^2.1.2",
+    "fs": "0.0.1-security",
+    "os": "^0.1.1"
+  },
+  "devDependencies": {},
+  "engines": {
+    "node": "18.x"
+  }
+}
