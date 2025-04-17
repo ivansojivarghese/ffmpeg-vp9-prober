@@ -1,0 +1,8 @@
+{
+    "functions": {
+      "api/ffprobe.js": {
+        "includeFiles": ["bin/yt-dlp"]
+      }
+    }
+  }
+  

@@ -1,8 +1,7 @@
 
-
-import path from 'path';
 import { exec } from 'child_process';
 import { promisify } from 'util';
+import path from 'path';
 
 const execAsync = promisify(exec);
 
@@ -18,8 +17,10 @@ export default async function handler(req, res) {
   }
 
   try {
+    // Pointing directly to bin/yt-dlp (binary is directly inside bin)
     const ytDlpPath = path.join(process.cwd(), 'bin', 'yt-dlp');
 
+    // Execute yt-dlp command
     const { stdout } = await execAsync(`${ytDlpPath} -F "${url}" --print-json`);
     const data = JSON.parse(stdout);
 
