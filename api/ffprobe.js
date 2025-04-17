@@ -1,4 +1,4 @@
-// /api/sample.js or sample.ts
+// /api/ffprobe.js
 import ffmpegPath from 'ffmpeg-static';
 import ffmpeg from 'fluent-ffmpeg';
 import { writeFile, readFile, unlink } from 'fs/promises';
