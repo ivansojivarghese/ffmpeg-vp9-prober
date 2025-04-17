@@ -1,20 +1,13 @@
-
 import { exec } from 'child_process';
 import { promisify } from 'util';
 
 const execAsync = promisify(exec);
 
-export const config = {
-  runtime: 'nodejs', // This might not be required if you're running as a normal Node server
-};
-
 export default async function handler(req, res) {
-  // Check if the method is POST
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method not allowed' });
   }
 
-  // Ensure a URL is provided in the request body
   const { url } = req.body;
 
   if (!url) {
@@ -22,26 +15,24 @@ export default async function handler(req, res) {
   }
 
   try {
-    // Run yt-dlp to fetch video format details
     const { stdout } = await execAsync(`yt-dlp -F "${url}" --print-json`);
-
     const data = JSON.parse(stdout);
 
-    // Extract relevant format details
     const formats = data.formats.map(f => ({
       format_id: f.format_id,
       ext: f.ext,
-      acodec: f.acodec,  // Audio codec
-      vcodec: f.vcodec,  // Video codec
-      format_note: f.format_note, // Additional format info (e.g., audio only, 1080p)
-      resolution: f.resolution, // Video resolution
+      acodec: f.acodec,
+      vcodec: f.vcodec,
+      format_note: f.format_note,
+      resolution: f.resolution,
     }));
 
-    // Return the video title and available formats
     res.status(200).json({ title: data.title, formats });
   } catch (err) {
-    // Catch errors, such as yt-dlp failing or invalid URL
-    res.status(500).json({ error: 'Failed to fetch codec details', details: err.message });
+    res.status(500).json({
+      error: 'Failed to fetch codec details',
+      details: err.message,
+    });
   }
 }
 
