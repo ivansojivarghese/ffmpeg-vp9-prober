@@ -17,13 +17,18 @@ def handler(request, response):
         yt_dlp_path = os.path.join(os.getcwd(), 'bin', 'yt-dlp')
         python_path = os.environ.get('PYTHON_BIN', 'python3')  # Use environment variable for Python path
 
+        # Ensure that the binary path exists
+        if not os.path.isfile(yt_dlp_path):
+            return response.json({'error': f'yt-dlp binary not found at {yt_dlp_path}'}, status=500)
+
         # Use subprocess to execute yt-dlp with Python
         command = [python_path, yt_dlp_path, '-F', url, '--print-json']
         result = subprocess.run(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         
+        # Check if the command ran successfully
         if result.returncode != 0:
-            raise Exception(f"yt-dlp error: {result.stderr.decode('utf-8')}")
-        
+            return response.json({'error': 'yt-dlp error', 'details': result.stderr.decode('utf-8')}, status=500)
+
         # Parse the output from yt-dlp
         data = json.loads(result.stdout.decode('utf-8'))
 
