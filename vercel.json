@@ -1,10 +1,9 @@
 {
     "functions": {
-      "api/ffprobe.js": {
+      "api/**.py": {
+        "runtime": "python3.8",
         "includeFiles": "bin/**"
       }
-    },
-    "env": {
-      "PYTHON_BIN": "python3"  
     }
   }
+  

@@ -16,14 +16,12 @@ export default async function handler(req, res) {
   }
 
   try {
-    // Install Python and yt-dlp if needed
-    await execAsync('apt-get update && apt-get install -y python3 python3-pip');
-    await execAsync('pip3 install yt-dlp');
-
-    // Define the path to the yt-dlp binary
+    // Point to the local yt-dlp binary
     const ytDlpPath = path.join(process.cwd(), 'bin', 'yt-dlp');
+    const pythonPath = process.env.PYTHON_BIN || 'python3';  // Use environment variable for Python path
 
-    const { stdout } = await execAsync(`python3 ${ytDlpPath} -F "${url}" --print-json`);
+    // Use `python3` as a prefix to the yt-dlp command to run it with Python
+    const { stdout } = await execAsync(`${pythonPath} ${ytDlpPath} -F "${url}" --print-json`);
     const data = JSON.parse(stdout);
 
     const formats = data.formats.map(f => ({
