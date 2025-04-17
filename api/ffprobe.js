@@ -1,4 +1,5 @@
 
+
 import path from 'path';
 import { exec } from 'child_process';
 import { promisify } from 'util';
@@ -17,12 +18,7 @@ export default async function handler(req, res) {
   }
 
   try {
-    const ytDlpPath = path.join(process.cwd(), 'bin', 'yt-dlp', 'yt-dlp');
-
-    // Ensure binary exists
-    if (!ytDlpPath || !ytDlpPath.endsWith('yt-dlp')) {
-      return res.status(500).json({ error: 'yt-dlp binary not found' });
-    }
+    const ytDlpPath = path.join(process.cwd(), 'bin', 'yt-dlp');
 
     const { stdout } = await execAsync(`${ytDlpPath} -F "${url}" --print-json`);
     const data = JSON.parse(stdout);
