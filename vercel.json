@@ -2,13 +2,13 @@
   "version": 2,
   "functions": {
     "api/index.py": {
-      "includeFiles": [
-        "bin/yt-dlp",
-        "python_packages/**"
-      ]
+      "includeFiles": "bin/yt-dlp,python_packages/**"
     }
   },
   "routes": [
-    { "src": "/(.*)", "dest": "/api/index.py" }
+    {
+      "src": "/(.*)",
+      "dest": "/api/index.py"
+    }
   ]
 }
