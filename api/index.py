@@ -62,12 +62,16 @@ class handler(BaseHTTPRequestHandler):
 
             print(f"Cookies have been saved to {cookies_path}")
             '''
+
+            ffmpeg_path = os.path.join(os.path.dirname(__file__), '..', 'vercel', 'path0', 'bin', 'ffmpeg')
+
             # yt-dlp options with cookies
             ydl_opts = {
                 'dump_single_json': True,
                 # 'simulate': True,
                 'cookiefile': cookies_path,  # Use the cookies file stored in /tmp
                 'cachedir': False,  # 👈 disables caching to avoid read-only filesystem issues
+                'ffmpeg_location': ffmpeg_path,  # 🔥 this is the key line
             }
 
             with YoutubeDL(ydl_opts) as ydl:
