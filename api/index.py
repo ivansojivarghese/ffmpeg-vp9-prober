@@ -104,9 +104,10 @@ class handler(BaseHTTPRequestHandler):
                     m3u8_url = info["url"]
 
                  # Run ffprobe if .m3u8 is found
+                ffprobe_info_json = {}
                 if m3u8_url:
-                    ffprobe_info = probe_with_ffprobe(m3u8_url, ffprobe_path=ffprobe_path)
-                    print(json.dumps(ffprobe_info, indent=2))
+                    ffprobe_info_json  = probe_with_ffprobe(m3u8_url, ffprobe_path=ffprobe_path)
+                    print(json.dumps(ffprobe_info_json, indent=2))
 
                 if not m3u8_url:
                     for f in info.get("formats", []):
@@ -131,7 +132,8 @@ class handler(BaseHTTPRequestHandler):
             # Return the video title and available formats
             return self._send_json(200, {
                 'title': info.get('title'),
-                'formats': formats
+                'formats': formats,
+                'ffprobe': ffprobe_info_json  # 👈 optional
             })
             
 
