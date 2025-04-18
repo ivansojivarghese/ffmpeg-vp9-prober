@@ -8,9 +8,6 @@ import shutil
 # import browser_cookie3
 from yt_dlp import YoutubeDL  # Import yt-dlp's YoutubeDL class
 
-ffmpeg_path = os.path.join(os.path.dirname(__file__), 'bin', 'ffmpeg')
-print(ffmpeg_path)
-
 
 class handler(BaseHTTPRequestHandler):
     def _send_json(self, status_code, data):
