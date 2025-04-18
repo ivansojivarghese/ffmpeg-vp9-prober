@@ -9,6 +9,8 @@ import shutil
 # import browser_cookie3
 from yt_dlp import YoutubeDL  # Import yt-dlp's YoutubeDL class
 
+print("yt-dlp version:", yt_dlp.__version__)
+
 def probe_with_ffprobe(stream_url, ffprobe_path="ffprobe"):
     try:
         result = subprocess.run(
@@ -92,14 +94,24 @@ class handler(BaseHTTPRequestHandler):
                 'cookiefile': cookies_path,  # Use the cookies file stored in /tmp
                 'cachedir': False,  # 👈 disables caching to avoid read-only filesystem issues
                 'ffmpeg_location': ffmpeg_path,  # 🔥 this is the key line
-                'format': 'bestvideo[protocol^=m3u8]+bestaudio/best[protocol^=m3u8]/best'
+                'force_ipv4': True,
+                'verbose': True,
+                'allow_unplayable_formats': True
+                # 'format': 'bestvideo[protocol^=m3u8]+bestaudio/best[protocol^=m3u8]/best'
             }
 
             with YoutubeDL(ydl_opts) as ydl:
                 # Extract video info without downloading
                 info = ydl.extract_info(url, download=False)
 
+                for f in info.get("formats", []):
+                    if 'm3u8' in (f.get('url') or '') or f.get('ext') == 'm3u8':
+                        print("[M3U8 FOUND]", json.dumps(f, indent=2))
+                    else:
+                        print("[Not m3u8]", f.get('format_id'), f.get('ext'), f.get('protocol'))
 
+
+                '''
                 # TRY TO GET THE M3U8 FORMATS!
                 m3u8_formats = []
 
@@ -114,9 +126,9 @@ class handler(BaseHTTPRequestHandler):
                             "vcodec": f.get("vcodec"),
                             "protocol": f.get("protocol"),
                         })
-
+                '''
                 
-
+                '''
                 # Optionally: find a stream URL (e.g. .m3u8)
                 m3u8_url = None
                 if info.get("url") and ".m3u8" in info["url"]:
@@ -133,7 +145,7 @@ class handler(BaseHTTPRequestHandler):
                 if m3u8_url:
                     ffprobe_info_json  = probe_with_ffprobe(m3u8_url, ffprobe_path=ffprobe_path)
                     print(json.dumps(ffprobe_info_json, indent=2))
-
+                '''
             
             # Check if 'formats' are available in the extracted data
             formats = [
@@ -152,7 +164,7 @@ class handler(BaseHTTPRequestHandler):
             return self._send_json(200, {
                 'title': info.get('title'),
                 'formats': formats,
-                'm3u8_streams': m3u8_formats
+                # 'm3u8_streams': m3u8_formats
                 # 'ffprobe': ffprobe_info_json  # 👈 optional
             })
             
