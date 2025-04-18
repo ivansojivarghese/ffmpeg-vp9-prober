@@ -1,2 +1,3 @@
 yt-dlp
+browser-cookie3
 Flask

@@ -2,7 +2,7 @@
   "version": 2,
   "functions": {
     "api/index.py": {
-      "includeFiles": "bin/yt-dlp,python_packages/**"
+      "includeFiles": "bin/yt-dlp,python_packages/**,tmp/cookies.txt"
     }
   },
   "routes": [
