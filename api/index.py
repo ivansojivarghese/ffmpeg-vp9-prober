@@ -28,6 +28,9 @@ class handler(BaseHTTPRequestHandler):
         try:
             yt_dlp_path = os.path.join(os.getcwd(), 'bin', 'yt-dlp')
 
+            print("yt-dlp path exists:", os.path.isfile(yt_dlp_path))
+            print("yt-dlp path:", yt_dlp_path)
+
             if not os.path.isfile(yt_dlp_path):
                 return self._send_json(500, {'error': 'yt-dlp binary not found'})
 
