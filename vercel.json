@@ -2,7 +2,7 @@
   "version": 2,
   "functions": {
     "api/index.py": {
-      "includeFiles": "bin/yt-dlp,bin/ffmpeg,python_packages/**,tmp/cookies.txt"
+      "includeFiles": "bin/yt-dlp,vercel/path0/bin/ffmpeg,vercel/path0/bin/ffprobe,python_packages/**,tmp/cookies.txt"
     }
   },
   "routes": [
