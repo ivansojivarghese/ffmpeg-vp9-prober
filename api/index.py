@@ -92,6 +92,7 @@ class handler(BaseHTTPRequestHandler):
                 'cookiefile': cookies_path,  # Use the cookies file stored in /tmp
                 'cachedir': False,  # 👈 disables caching to avoid read-only filesystem issues
                 'ffmpeg_location': ffmpeg_path,  # 🔥 this is the key line
+                'format': 'bestvideo[protocol^=m3u8]+bestaudio/best[protocol^=m3u8]/best'
             }
 
             with YoutubeDL(ydl_opts) as ydl:
@@ -103,17 +104,17 @@ class handler(BaseHTTPRequestHandler):
                 if info.get("url") and ".m3u8" in info["url"]:
                     m3u8_url = info["url"]
 
-                 # Run ffprobe if .m3u8 is found
-                ffprobe_info_json = {}
-                if m3u8_url:
-                    ffprobe_info_json  = probe_with_ffprobe(m3u8_url, ffprobe_path=ffprobe_path)
-                    print(json.dumps(ffprobe_info_json, indent=2))
-
                 if not m3u8_url:
                     for f in info.get("formats", []):
                         if f.get("ext") == "m3u8" or f.get("protocol") == "m3u8_native":
                             m3u8_url = f.get("url")
                             break
+
+                 # Run ffprobe if .m3u8 is found
+                ffprobe_info_json = {}
+                if m3u8_url:
+                    ffprobe_info_json  = probe_with_ffprobe(m3u8_url, ffprobe_path=ffprobe_path)
+                    print(json.dumps(ffprobe_info_json, indent=2))
 
             
             # Check if 'formats' are available in the extracted data
