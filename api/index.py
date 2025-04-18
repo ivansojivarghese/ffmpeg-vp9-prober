@@ -10,7 +10,7 @@ import shutil
 import yt_dlp
 from yt_dlp import YoutubeDL  # Import yt-dlp's YoutubeDL class
 
-print("yt-dlp version:", yt_dlp.__version__)
+print("yt-dlp version:", yt_dlp.version.__version__)  # ✅ proper way
 
 def probe_with_ffprobe(stream_url, ffprobe_path="ffprobe"):
     try:
