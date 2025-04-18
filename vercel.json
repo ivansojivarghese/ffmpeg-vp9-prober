@@ -2,11 +2,7 @@
   "version": 2,
   "functions": {
     "api/index.py": {
-<<<<<<< HEAD
       "includeFiles": "bin/yt-dlp,python_packages/**"
-=======
-      "includeFiles": "bin/**"
->>>>>>> parent of e8fb2a5 (update)
     }
   },
   "routes": [
