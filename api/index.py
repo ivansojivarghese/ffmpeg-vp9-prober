@@ -6,44 +6,46 @@ import subprocess
 import os
 
 class handler(BaseHTTPRequestHandler):
-    def do_POST(self):
-        content_length = int(self.headers['Content-Length'])
-        body = self.rfile.read(content_length)
-        data = json.loads(body)
+    def _send_json(self, status_code, data):
+        self.send_response(status_code)
+        self.send_header('Content-Type', 'application/json')
+        self.end_headers()
+        self.wfile.write(json.dumps(data).encode())
 
-        url = data.get('url')
+    def do_POST(self):
+        content_length = int(self.headers.get('Content-Length', 0))
+        body = self.rfile.read(content_length)
+
+        try:
+            data = json.loads(body)
+            url = data.get('url')
+        except Exception:
+            return self._send_json(400, {'error': 'Invalid JSON'})
 
         if not url:
-            self.send_response(400)
-            self.send_header('Content-type', 'application/json')
-            self.end_headers()
-            self.wfile.write(json.dumps({'error': 'Missing YouTube URL'}).encode())
-            return
+            return self._send_json(400, {'error': 'Missing YouTube URL'})
 
         try:
             yt_dlp_path = os.path.join(os.getcwd(), 'bin', 'yt-dlp')
-            python_path = os.environ.get('PYTHON_BIN', 'python3')
 
             if not os.path.isfile(yt_dlp_path):
-                self.send_response(500)
-                self.end_headers()
-                self.wfile.write(json.dumps({'error': 'yt-dlp binary not found'}).encode())
-                return
+                return self._send_json(500, {'error': 'yt-dlp binary not found'})
 
-            command = [python_path, yt_dlp_path, '-F', url, '--print-json']
+            # Use the standalone binary directly (no need for python3)
+            command = [yt_dlp_path, '-F', url, '--print-json']
             result = subprocess.run(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 
             if result.returncode != 0:
-                self.send_response(500)
-                self.end_headers()
-                self.wfile.write(json.dumps({'error': 'yt-dlp error', 'details': result.stderr.decode()}).encode())
-                return
+                return self._send_json(500, {
+                    'error': 'yt-dlp error',
+                    'details': result.stderr.decode()
+                })
 
             data = json.loads(result.stdout.decode())
             formats = [
                 {
-                    'format_id': f['format_id'],
-                    'ext': f['ext'],
+                    'format_id': f.get('format_id'),
+                    'ext': f.get('ext'),
                     'acodec': f.get('acodec'),
                     'vcodec': f.get('vcodec'),
                     'format_note': f.get('format_note'),
@@ -52,12 +54,13 @@ class handler(BaseHTTPRequestHandler):
                 for f in data.get('formats', [])
             ]
 
-            self.send_response(200)
-            self.send_header('Content-type', 'application/json')
-            self.end_headers()
-            self.wfile.write(json.dumps({'title': data['title'], 'formats': formats}).encode())
+            return self._send_json(200, {
+                'title': data.get('title'),
+                'formats': formats
+            })
 
         except Exception as e:
-            self.send_response(500)
-            self.end_headers()
-            self.wfile.write(json.dumps({'error': 'Exception occurred', 'details': str(e)}).encode())
+            return self._send_json(500, {
+                'error': 'Exception occurred',
+                'details': str(e)
+            })
