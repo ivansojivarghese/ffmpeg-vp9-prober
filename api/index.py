@@ -4,7 +4,6 @@ from http.server import BaseHTTPRequestHandler
 import json
 import subprocess
 import os
-import sys
 
 class handler(BaseHTTPRequestHandler):
     def _send_json(self, status_code, data):
