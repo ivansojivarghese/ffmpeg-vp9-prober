@@ -99,6 +99,24 @@ class handler(BaseHTTPRequestHandler):
                 # Extract video info without downloading
                 info = ydl.extract_info(url, download=False)
 
+
+                # TRY TO GET THE M3U8 FORMATS!
+                m3u8_formats = []
+
+                for f in info.get("formats", []):
+                    # Check if it's a HLS (m3u8) stream
+                    if f.get("ext") == "m3u8" or f.get("protocol") == "m3u8_native":
+                        m3u8_formats.append({
+                            "url": f.get("url"),
+                            "format_id": f.get("format_id"),
+                            "resolution": f.get("resolution"),
+                            "acodec": f.get("acodec"),
+                            "vcodec": f.get("vcodec"),
+                            "protocol": f.get("protocol"),
+                        })
+
+                
+
                 # Optionally: find a stream URL (e.g. .m3u8)
                 m3u8_url = None
                 if info.get("url") and ".m3u8" in info["url"]:
@@ -134,7 +152,8 @@ class handler(BaseHTTPRequestHandler):
             return self._send_json(200, {
                 'title': info.get('title'),
                 'formats': formats,
-                'ffprobe': ffprobe_info_json  # 👈 optional
+                'm3u8_streams': m3u8_formats
+                # 'ffprobe': ffprobe_info_json  # 👈 optional
             })
             
 
