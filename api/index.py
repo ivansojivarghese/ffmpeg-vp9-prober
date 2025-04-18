@@ -74,6 +74,7 @@ class handler(BaseHTTPRequestHandler):
                 # Extract video info without downloading
                 info = ydl.extract_info(url, download=False)
 
+            '''
             # Check if 'formats' are available in the extracted data
             formats = [
                 {
@@ -92,6 +93,10 @@ class handler(BaseHTTPRequestHandler):
                 'title': info.get('title'),
                 'formats': formats
             })
+            '''
+
+            # Return full info
+            return self._send_json(200, info)
 
         except Exception as e:
             return self._send_json(500, {
