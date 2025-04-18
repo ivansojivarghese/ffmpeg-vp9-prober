@@ -4,6 +4,7 @@ from http.server import BaseHTTPRequestHandler
 import json
 import os
 import sys
+import shutil
 # import browser_cookie3
 from yt_dlp import YoutubeDL  # Import yt-dlp's YoutubeDL class
 
@@ -33,8 +34,12 @@ class handler(BaseHTTPRequestHandler):
             # ydl_opts = {'dump_single_json': True, 'simulate': True}
 
             # Path to the exported cookies file
-            cookies_path = os.path.join(os.getcwd(), 'tmp', 'cookies.txt')
+            # cookies_path = os.path.join(os.getcwd(), 'tmp', 'cookies.txt')
             # cookies_path = '/tmp/cookies.txt'
+
+            source_path = os.path.join(os.path.dirname(__file__), 'cookies.txt')  # inside project
+            cookies_path = '/tmp/cookies.txt'  # writable during runtime
+            shutil.copyfile(source_path, cookies_path)
 
             # Check if the cookies file exists
             '''
