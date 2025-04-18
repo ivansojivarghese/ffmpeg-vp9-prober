@@ -65,7 +65,7 @@ class handler(BaseHTTPRequestHandler):
             # yt-dlp options with cookies
             ydl_opts = {
                 'dump_single_json': True,
-                'simulate': True,
+                # 'simulate': True,
                 'cookiefile': cookies_path,  # Use the cookies file stored in /tmp
                 'cachedir': False,  # 👈 disables caching to avoid read-only filesystem issues
             }
