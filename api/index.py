@@ -7,6 +7,7 @@ import os
 import sys
 import shutil
 # import browser_cookie3
+import yt_dlp
 from yt_dlp import YoutubeDL  # Import yt-dlp's YoutubeDL class
 
 print("yt-dlp version:", yt_dlp.__version__)
