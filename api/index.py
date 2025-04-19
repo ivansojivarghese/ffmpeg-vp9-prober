@@ -112,7 +112,7 @@ class handler(BaseHTTPRequestHandler):
             ffprobe_path = os.path.join(os.path.dirname(__file__), '..', 'vercel', 'path0', 'bin', 'ffprobe') 
 
             # yt-dlp options with cookies
-            '''
+            
             ydl_opts = {
                 'dump_single_json': True,
                 # 'simulate': True,
@@ -124,7 +124,7 @@ class handler(BaseHTTPRequestHandler):
                 'allow_unplayable_formats': True
                 # 'format': 'bestvideo[protocol^=m3u8]+bestaudio/best[protocol^=m3u8]/best'
             }
-            '''
+            
             '''
             ydl_opts = {
                 'quiet': False,
@@ -164,7 +164,7 @@ class handler(BaseHTTPRequestHandler):
                 'dump_single_json': True,
             }
             '''
-
+            '''
             ydl_opts = {
                 'quiet': False,
                 'skip_download': True,
@@ -180,7 +180,7 @@ class handler(BaseHTTPRequestHandler):
                 'verbose': True,
                 'cachedir': False,
             }
-
+            '''
             # ydl_opts['logger'] = MyLogger()
 
 
