@@ -1,4 +1,3 @@
-# api/index.py
 
 from http.server import BaseHTTPRequestHandler
 import json
@@ -9,31 +8,9 @@ import shutil
 # import browser_cookie3
 import multiprocessing
 import concurrent.futures
-
 import yt_dlp
 from yt_dlp import YoutubeDL  # Import yt-dlp's YoutubeDL class
 
-# print("yt-dlp version:", yt_dlp.version.__version__)  # ✅ proper way
-'''
-def probe_with_ffprobe(stream_url, ffprobe_path="ffprobe"):
-    try:
-        result = subprocess.run(
-            [
-                ffprobe_path,
-                "-v", "error",
-                "-show_entries", "format:stream=index,codec_name,codec_type,codec_long_name,width,height,bit_rate",
-                "-of", "json",
-                stream_url
-            ],
-            stdout=subprocess.PIPE,
-            stderr=subprocess.PIPE,
-            text=True
-        )
-        return json.loads(result.stdout)
-    except Exception as e:
-        print("ffprobe error:", e)
-        return None
-'''
 
 def probe_with_ffprobe(stream_url, ffprobe_path="ffprobe"):
     try:
@@ -56,6 +33,43 @@ def probe_with_ffprobe(stream_url, ffprobe_path="ffprobe"):
     except Exception as e:
         print("ffprobe error:", e)
         return None
+
+
+def generate_vp9_codec_string(stream):
+    profile_map = {
+        "Profile 0": "00",
+        "Profile 1": "01",
+        "Profile 2": "02",
+        "Profile 3": "03"
+    }
+
+    # Guess level based on resolution (fallback if ffprobe gives -99)
+    def guess_level(width, height):
+        if width >= 3840 or height >= 2160:
+            return "11"  # Level 5.1
+        elif width >= 2560 or height >= 1440:
+            return "10"  # Level 5.0
+        elif width >= 1920 or height >= 1080:
+            return "09"  # Level 4.2
+        else:
+            return "08"  # Level 4.1 or below
+
+    profile_str = profile_map.get(stream.get("profile", ""), "00")
+    level_str = (
+        f"{abs(int(stream.get('level'))):02}" if stream.get("level", -99) >= 0
+        else guess_level(stream.get("width", 0), stream.get("height", 0))
+    )
+
+    # Bit depth from pix_fmt
+    pix_fmt = stream.get("pix_fmt", "")
+    bit_depth = {
+        "yuv420p": "08",
+        "yuv420p10le": "10",
+        "yuv420p12le": "12"
+    }.get(pix_fmt, "08")
+
+    return f"vp09.{profile_str}.{level_str}.{bit_depth}"
+
 
 class handler(BaseHTTPRequestHandler):
     def _send_json(self, status_code, data):
@@ -124,82 +138,11 @@ class handler(BaseHTTPRequestHandler):
                 'ffmpeg_location': ffmpeg_path,  # 🔥 this is the key line
                 # 'format': 'bestvideo[protocol^=m3u8]+bestaudio/best[protocol^=m3u8]/best'
             }
-            
-            '''
-            ydl_opts = {
-                'quiet': False,
-                'skip_download': True,
-                'forcejson': False,
-                'simulate': False,
-                'noplaylist': True,
-                'extract_flat': False,
-                'ignoreerrors': True,
-                'dump_single_json': True,
-                'nocheckcertificate': True,
-            }
-            '''
-            '''
-            class MyLogger:
-                def debug(self, msg): print("[DEBUG]", msg)
-                def warning(self, msg): print("[WARNING]", msg)
-                def error(self, msg): print("[ERROR]", msg)
-            '''
-            '''
-            ydl_opts = {
-                'quiet': False,
-                'skip_download': True,
-                'noplaylist': True,
-                'extract_flat': False,
-                # 'ignoreerrors': True,
-                'nocheckcertificate': True,
-                'merge_output_format': None,
-                'format': 'bestaudio/best',  # This helps force full format probing
-                'cookiefile': cookies_path,
-                'cachedir': False,
-                'ffmpeg_location': ffmpeg_path,
-                'force_ipv4': True,
-                'allow_unplayable_formats': True,
-                'verbose': True,
-                'logger': MyLogger(),
-                'dump_single_json': True,
-            }
-            '''
-            '''
-            ydl_opts = {
-                'quiet': False,
-                'skip_download': True,
-                'noplaylist': True,
-                'extract_flat': False,
-                'ignoreerrors': True,
-                'nocheckcertificate': True,
-                'force_ipv4': True,
-                'allow_unplayable_formats': True,
-                'format': 'bv*+ba* / b* / best',
-                'cookiefile': cookies_path,
-                'ffmpeg_location': ffmpeg_path,
-                'verbose': True,
-                'cachedir': False,
-            }
-            '''
-            # ydl_opts['logger'] = MyLogger()
-
 
             with YoutubeDL(ydl_opts) as ydl:
                 # Extract video info without downloading
                 info = ydl.extract_info(url, download=False)
                 formats = info.get('formats', [])
-
-                # Get the VP9 format URL
-                
-                # vp9_format = next((f for f in info.get("formats", []) if f.get("vcodec", "") == "vp9"), None)
-
-                # ffprobe_data = {}
-                '''
-                for f in formats:
-                    if f.get('url') and f.get('vcodec') != 'none':  # Skip audio-only
-                        ffprobe_data = probe_with_ffprobe(f['url'], ffprobe_path)
-                        break
-                '''
 
                 # Filter formats to only those with VP9 or VP9.x codecs
                 vp9_formats = [
@@ -209,38 +152,24 @@ class handler(BaseHTTPRequestHandler):
 
                 ffprobe_results = []
 
-                '''
-                for f in formats:
-                    # if f.get('url') and f.get('vcodec') != 'none':  # Only include video formats
-                    if (
-                        f.get('url') 
-                        and f.get('vcodec') != 'none' 
-                        and 'vp9' in f.get('vcodec', '').lower()
-                    ):
-                        try:
-                            ff_data = probe_with_ffprobe(f['url'], ffprobe_path)
-                            ffprobe_results.append({
-                                'format_id': f.get('format_id'),
-                                'format_note': f.get('format_note'),
-                                'ext': f.get('ext'),
-                                'ffprobe': ff_data
-                            })
-                        except Exception as e:
-                            ffprobe_results.append({
-                                'format_id': f.get('format_id'),
-                                'error': str(e)
-                            })
-                '''
-
                 # Function to probe a single format
                 def probe_format(f):
                     try:
                         ff_data = probe_with_ffprobe(f['url'], ffprobe_path)
+
+                        # Try to generate VP9 codec string from the first stream
+                        streams = ff_data.get("streams", [])
+                        vp9_codec = None
+
+                         if streams:
+                            vp9_codec = generate_vp9_codec_string(streams[0])  # Always try first stream
+
                         return {
                             'format_id': f.get('format_id'),
                             'format_note': f.get('format_note'),
                             'ext': f.get('ext'),
-                            'ffprobe': ff_data
+                            'ffprobe': ff_data,
+                            'vp9_codec': vp9_codec
                         }
                     except Exception as e:
                         return {
@@ -259,88 +188,15 @@ class handler(BaseHTTPRequestHandler):
 
                 # Return everything as JSON
                 return self._send_json(200, {
-                    'title': info.get('title'),
-                    'formats': formats,        # All formats from yt-dlp
+                    # 'title': info.get('title'),
+                    # 'formats': formats,        # All formats from yt-dlp
                     'ffprobe': ffprobe_results    # Optional detailed info 
                 })
 
-                
-                '''
-                if 'formats' not in info:
-                    print("No formats found at all.")
-                else:
-                    for f in info['formats']:
-                        print(f"{f.get('format_id')} - {f.get('ext')} - {f.get('protocol')} - {f.get('url')}")
-                '''
-                '''
-                for f in info.get('formats', []):
-                    print(json.dumps(f, indent=2))
-
-                for f in formats:
-                    if 'm3u8' in f.get('url', '') or f.get('protocol') in ['m3u8_native', 'm3u8']:
-                        print(f"[M3U8] {f['format_id']} {f['ext']} {f['url']}")
-                '''
-
-                '''
-                # TRY TO GET THE M3U8 FORMATS!
-                m3u8_formats = []
-
-                for f in info.get("formats", []):
-                    # Check if it's a HLS (m3u8) stream
-                    if f.get("ext") == "m3u8" or f.get("protocol") == "m3u8_native":
-                        m3u8_formats.append({
-                            "url": f.get("url"),
-                            "format_id": f.get("format_id"),
-                            "resolution": f.get("resolution"),
-                            "acodec": f.get("acodec"),
-                            "vcodec": f.get("vcodec"),
-                            "protocol": f.get("protocol"),
-                        })
-                '''
-                
-                '''
-                # Optionally: find a stream URL (e.g. .m3u8)
-                m3u8_url = None
-                if info.get("url") and ".m3u8" in info["url"]:
-                    m3u8_url = info["url"]
-
-                if not m3u8_url:
-                    for f in info.get("formats", []):
-                        if f.get("ext") == "m3u8" or f.get("protocol") == "m3u8_native":
-                            m3u8_url = f.get("url")
-                            break
-
-                 # Run ffprobe if .m3u8 is found
-                ffprobe_info_json = {}
-                if m3u8_url:
-                    ffprobe_info_json  = probe_with_ffprobe(m3u8_url, ffprobe_path=ffprobe_path)
-                    print(json.dumps(ffprobe_info_json, indent=2))
-                '''
-            '''
-            # Check if 'formats' are available in the extracted data
-            formats = [
-                {
-                    'format_id': f.get('format_id'),
-                    'ext': f.get('ext'),
-                    'acodec': f.get('acodec'),
-                    'vcodec': f.get('vcodec'),
-                    'format_note': f.get('format_note'),
-                    'resolution': f.get('resolution')
-                }
-                for f in info.get('formats', [])
-            ]
-
-            # Return the video title and available formats
-            return self._send_json(200, {
-                'title': info.get('title'),
-                'formats': formats,
-                # 'm3u8_streams': m3u8_formats
-                # 'ffprobe': ffprobe_info_json  # 👈 optional
-            })
-            '''
-
             # Return full info
             # return self._send_json(200, info)
+
+            # CUSTOMIZE WHERE NEEDED
 
         except Exception as e:
             return self._send_json(500, {
