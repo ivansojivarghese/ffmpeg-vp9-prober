@@ -248,10 +248,13 @@ class handler(BaseHTTPRequestHandler):
                             'error': str(e)
                         }
 
-                # max_workers = min(32, (multiprocessing.cpu_count() or 1) * 5)
+                try:
+                    max_workers = min(32, (multiprocessing.cpu_count() or 1) * 5)
+                except Exception:
+                    max_workers = 10  # Fallback default
 
                 # Run probing concurrently
-                with concurrent.futures.ThreadPoolExecutor(max_workers=10) as executor:
+                with concurrent.futures.ThreadPoolExecutor(max_workers) as executor:
                     ffprobe_results = list(executor.map(probe_format, vp9_formats))
 
                 # Return everything as JSON
