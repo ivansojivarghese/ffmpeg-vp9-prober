@@ -115,12 +115,18 @@ class handler(BaseHTTPRequestHandler):
                 'nocheckcertificate': True,
             }
             '''
+
+            class MyLogger:
+                def debug(self, msg): print("[DEBUG]", msg)
+                def warning(self, msg): print("[WARNING]", msg)
+                def error(self, msg): print("[ERROR]", msg)
+
             ydl_opts = {
                 'quiet': False,
                 'skip_download': True,
                 'noplaylist': True,
                 'extract_flat': False,
-                'ignoreerrors': True,
+                # 'ignoreerrors': True,
                 'nocheckcertificate': True,
                 'merge_output_format': None,
                 'format': 'bestaudio/best',  # This helps force full format probing
@@ -130,8 +136,11 @@ class handler(BaseHTTPRequestHandler):
                 'force_ipv4': True,
                 'allow_unplayable_formats': True,
                 'verbose': True,
-                # optionally: 'dump_single_json': True,
+                'logger': MyLogger(),
+                'dump_single_json': True,
             }
+
+            ydl_opts['logger'] = MyLogger()
 
 
             with YoutubeDL(ydl_opts) as ydl:
