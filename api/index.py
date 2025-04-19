@@ -7,7 +7,7 @@ import os
 import sys
 import shutil
 # import browser_cookie3
-# import concurrent.futures
+import concurrent.futures
 
 import yt_dlp
 from yt_dlp import YoutubeDL  # Import yt-dlp's YoutubeDL class
@@ -199,8 +199,16 @@ class handler(BaseHTTPRequestHandler):
                         ffprobe_data = probe_with_ffprobe(f['url'], ffprobe_path)
                         break
                 '''
+
+                # Filter formats to only those with VP9 or VP9.x codecs
+                vp9_formats = [
+                    f for f in formats
+                    if f.get('url') and f.get('vcodec', '').lower().startswith('vp9')
+                ]
+
                 ffprobe_results = []
 
+                '''
                 for f in formats:
                     # if f.get('url') and f.get('vcodec') != 'none':  # Only include video formats
                     if (
@@ -221,6 +229,27 @@ class handler(BaseHTTPRequestHandler):
                                 'format_id': f.get('format_id'),
                                 'error': str(e)
                             })
+                '''
+
+                # Function to probe a single format
+                def probe_format(f):
+                    try:
+                        ff_data = probe_with_ffprobe(f['url'], ffprobe_path)
+                        return {
+                            'format_id': f.get('format_id'),
+                            'format_note': f.get('format_note'),
+                            'ext': f.get('ext'),
+                            'ffprobe': ff_data
+                        }
+                    except Exception as e:
+                        return {
+                            'format_id': f.get('format_id'),
+                            'error': str(e)
+                        }
+
+                # Run probing concurrently
+                with concurrent.futures.ThreadPoolExecutor(max_workers=5) as executor:
+                    ffprobe_results = list(executor.map(probe_format, vp9_formats))
 
                 # Return everything as JSON
                 return self._send_json(200, {
