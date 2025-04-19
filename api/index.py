@@ -184,17 +184,27 @@ class handler(BaseHTTPRequestHandler):
             with YoutubeDL(ydl_opts) as ydl:
                 # Extract video info without downloading
                 info = ydl.extract_info(url, download=False)
-                # formats = info.get('formats', [])
+                formats = info.get('formats', [])
 
                 # Get the VP9 format URL
-                '''
-                vp9_format = next((f for f in info.get("formats", []) if f.get("vcodec", "") == "vp9"), None)
+                
+                # vp9_format = next((f for f in info.get("formats", []) if f.get("vcodec", "") == "vp9"), None)
+
                 ffprobe_data = {}
 
-                if vp9_format and vp9_format.get("url"):
-                    ffprobe_data = probe_with_ffprobe(vp9_format["url"], ffprobe_path)
-                    print("FFPROBE DATA:", json.dumps(ffprobe_data, indent=2))
-                '''
+                for f in formats:
+                    if f.get('url') and f.get('vcodec') != 'none':  # Skip audio-only
+                        ffprobe_data = probe_with_ffprobe(f['url'], ffprobe_path)
+                        break
+
+                # Return everything as JSON
+                return self._send_json(200, {
+                    'title': info.get('title'),
+                    'formats': formats,        # All formats from yt-dlp
+                    'ffprobe': ffprobe_data    # Optional detailed info (1st video stream)
+                })
+
+                
                 '''
                 if 'formats' not in info:
                     print("No formats found at all.")
@@ -270,7 +280,7 @@ class handler(BaseHTTPRequestHandler):
             '''
 
             # Return full info
-            return self._send_json(200, info)
+            # return self._send_json(200, info)
 
         except Exception as e:
             return self._send_json(500, {
