@@ -7,6 +7,8 @@ import os
 import sys
 import shutil
 # import browser_cookie3
+# import concurrent.futures
+
 import yt_dlp
 from yt_dlp import YoutubeDL  # Import yt-dlp's YoutubeDL class
 
@@ -190,18 +192,36 @@ class handler(BaseHTTPRequestHandler):
                 
                 # vp9_format = next((f for f in info.get("formats", []) if f.get("vcodec", "") == "vp9"), None)
 
-                ffprobe_data = {}
-
+                # ffprobe_data = {}
+                '''
                 for f in formats:
                     if f.get('url') and f.get('vcodec') != 'none':  # Skip audio-only
                         ffprobe_data = probe_with_ffprobe(f['url'], ffprobe_path)
                         break
+                '''
+                ffprobe_results = []
+
+                for f in formats:
+                    if f.get('url') and f.get('vcodec') != 'none':  # Only include video formats
+                        try:
+                            ff_data = probe_with_ffprobe(f['url'], ffprobe_path)
+                            ffprobe_results.append({
+                                'format_id': f.get('format_id'),
+                                'format_note': f.get('format_note'),
+                                'ext': f.get('ext'),
+                                'ffprobe': ff_data
+                            })
+                        except Exception as e:
+                            ffprobe_results.append({
+                                'format_id': f.get('format_id'),
+                                'error': str(e)
+                            })
 
                 # Return everything as JSON
                 return self._send_json(200, {
                     'title': info.get('title'),
                     'formats': formats,        # All formats from yt-dlp
-                    'ffprobe': ffprobe_data    # Optional detailed info (1st video stream)
+                    'ffprobe': ffprobe_results    # Optional detailed info 
                 })
 
                 
