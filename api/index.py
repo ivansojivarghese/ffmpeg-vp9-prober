@@ -119,9 +119,6 @@ class handler(BaseHTTPRequestHandler):
                 'cookiefile': cookies_path,  # Use the cookies file stored in /tmp
                 'cachedir': False,  # 👈 disables caching to avoid read-only filesystem issues
                 'ffmpeg_location': ffmpeg_path,  # 🔥 this is the key line
-                'force_ipv4': True,
-                'verbose': True,
-                'allow_unplayable_formats': True
                 # 'format': 'bestvideo[protocol^=m3u8]+bestaudio/best[protocol^=m3u8]/best'
             }
             
@@ -190,13 +187,14 @@ class handler(BaseHTTPRequestHandler):
                 # formats = info.get('formats', [])
 
                 # Get the VP9 format URL
+                '''
                 vp9_format = next((f for f in info.get("formats", []) if f.get("vcodec", "") == "vp9"), None)
                 ffprobe_data = {}
 
                 if vp9_format and vp9_format.get("url"):
                     ffprobe_data = probe_with_ffprobe(vp9_format["url"], ffprobe_path)
                     print("FFPROBE DATA:", json.dumps(ffprobe_data, indent=2))
-
+                '''
                 '''
                 if 'formats' not in info:
                     print("No formats found at all.")
@@ -248,7 +246,7 @@ class handler(BaseHTTPRequestHandler):
                     ffprobe_info_json  = probe_with_ffprobe(m3u8_url, ffprobe_path=ffprobe_path)
                     print(json.dumps(ffprobe_info_json, indent=2))
                 '''
-            
+            '''
             # Check if 'formats' are available in the extracted data
             formats = [
                 {
@@ -269,10 +267,10 @@ class handler(BaseHTTPRequestHandler):
                 # 'm3u8_streams': m3u8_formats
                 # 'ffprobe': ffprobe_info_json  # 👈 optional
             })
-            
+            '''
 
             # Return full info
-            # return self._send_json(200, info)
+            return self._send_json(200, info)
 
         except Exception as e:
             return self._send_json(500, {
