@@ -12,7 +12,7 @@ import shutil
 import yt_dlp
 from yt_dlp import YoutubeDL  # Import yt-dlp's YoutubeDL class
 
-print("yt-dlp version:", yt_dlp.version.__version__)  # ✅ proper way
+# print("yt-dlp version:", yt_dlp.version.__version__)  # ✅ proper way
 '''
 def probe_with_ffprobe(stream_url, ffprobe_path="ffprobe"):
     try:
@@ -202,7 +202,12 @@ class handler(BaseHTTPRequestHandler):
                 ffprobe_results = []
 
                 for f in formats:
-                    if f.get('url') and f.get('vcodec') != 'none':  # Only include video formats
+                    # if f.get('url') and f.get('vcodec') != 'none':  # Only include video formats
+                    if (
+                        f.get('url') 
+                        and f.get('vcodec') != 'none' 
+                        and 'vp9' in f.get('vcodec', '').lower()
+                    ):
                         try:
                             ff_data = probe_with_ffprobe(f['url'], ffprobe_path)
                             ffprobe_results.append({
