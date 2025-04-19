@@ -120,7 +120,7 @@ class handler(BaseHTTPRequestHandler):
                 def debug(self, msg): print("[DEBUG]", msg)
                 def warning(self, msg): print("[WARNING]", msg)
                 def error(self, msg): print("[ERROR]", msg)
-
+            '''
             ydl_opts = {
                 'quiet': False,
                 'skip_download': True,
@@ -139,21 +139,46 @@ class handler(BaseHTTPRequestHandler):
                 'logger': MyLogger(),
                 'dump_single_json': True,
             }
+            '''
 
-            ydl_opts['logger'] = MyLogger()
+            ydl_opts = {
+                'quiet': False,
+                'skip_download': True,
+                'noplaylist': True,
+                'extract_flat': False,
+                'ignoreerrors': True,
+                'nocheckcertificate': True,
+                'force_ipv4': True,
+                'allow_unplayable_formats': True,
+                'format': 'bv*+ba* / b* / best',
+                'cookiefile': cookies_path,
+                'ffmpeg_location': ffmpeg_path,
+                'verbose': True,
+                'cachedir': False,
+            }
+
+            # ydl_opts['logger'] = MyLogger()
 
 
             with YoutubeDL(ydl_opts) as ydl:
                 # Extract video info without downloading
                 info = ydl.extract_info(url, download=False)
                 # formats = info.get('formats', [])
+
+                if 'formats' not in info:
+                    print("No formats found at all.")
+                else:
+                    for f in info['formats']:
+                        print(f"{f.get('format_id')} - {f.get('ext')} - {f.get('protocol')} - {f.get('url')}")
+
+                '''
                 for f in info.get('formats', []):
                     print(json.dumps(f, indent=2))
 
                 for f in formats:
                     if 'm3u8' in f.get('url', '') or f.get('protocol') in ['m3u8_native', 'm3u8']:
                         print(f"[M3U8] {f['format_id']} {f['ext']} {f['url']}")
-
+                '''
 
                 '''
                 # TRY TO GET THE M3U8 FORMATS!
