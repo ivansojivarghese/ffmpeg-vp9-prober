@@ -89,6 +89,7 @@ class handler(BaseHTTPRequestHandler):
             ffprobe_path = os.path.join(os.path.dirname(__file__), '..', 'vercel', 'path0', 'bin', 'ffprobe') 
 
             # yt-dlp options with cookies
+            '''
             ydl_opts = {
                 'dump_single_json': True,
                 # 'simulate': True,
@@ -100,16 +101,49 @@ class handler(BaseHTTPRequestHandler):
                 'allow_unplayable_formats': True
                 # 'format': 'bestvideo[protocol^=m3u8]+bestaudio/best[protocol^=m3u8]/best'
             }
+            '''
+            '''
+            ydl_opts = {
+                'quiet': False,
+                'skip_download': True,
+                'forcejson': False,
+                'simulate': False,
+                'noplaylist': True,
+                'extract_flat': False,
+                'ignoreerrors': True,
+                'dump_single_json': True,
+                'nocheckcertificate': True,
+            }
+            '''
+            ydl_opts = {
+                'quiet': False,
+                'skip_download': True,
+                'noplaylist': True,
+                'extract_flat': False,
+                'ignoreerrors': True,
+                'nocheckcertificate': True,
+                'merge_output_format': None,
+                'format': 'bestaudio/best',  # This helps force full format probing
+                'cookiefile': cookies_path,
+                'cachedir': False,
+                'ffmpeg_location': ffmpeg_path,
+                'force_ipv4': True,
+                'allow_unplayable_formats': True,
+                'verbose': True,
+                # optionally: 'dump_single_json': True,
+            }
+
 
             with YoutubeDL(ydl_opts) as ydl:
                 # Extract video info without downloading
                 info = ydl.extract_info(url, download=False)
+                # formats = info.get('formats', [])
+                for f in info.get('formats', []):
+                    print(json.dumps(f, indent=2))
 
-                for f in info.get("formats", []):
-                    if 'm3u8' in (f.get('url') or '') or f.get('ext') == 'm3u8':
-                        print("[M3U8 FOUND]", json.dumps(f, indent=2))
-                    else:
-                        print("[Not m3u8]", f.get('format_id'), f.get('ext'), f.get('protocol'))
+                for f in formats:
+                    if 'm3u8' in f.get('url', '') or f.get('protocol') in ['m3u8_native', 'm3u8']:
+                        print(f"[M3U8] {f['format_id']} {f['ext']} {f['url']}")
 
 
                 '''
