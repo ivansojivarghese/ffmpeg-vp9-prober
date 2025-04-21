@@ -161,7 +161,7 @@ class handler(BaseHTTPRequestHandler):
                         streams = ff_data.get("streams", [])
                         vp9_codec = None
 
-                         if streams:
+                        if streams:
                             vp9_codec = generate_vp9_codec_string(streams[0])  # Always try first stream
 
                         return {
