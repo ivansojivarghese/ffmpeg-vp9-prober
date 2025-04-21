@@ -5,7 +5,7 @@ import subprocess
 import os
 import sys
 import shutil
-# import browser_cookie3
+import browser_cookie3
 import multiprocessing
 import concurrent.futures
 import yt_dlp
@@ -99,9 +99,16 @@ class handler(BaseHTTPRequestHandler):
             # cookies_path = os.path.join(os.getcwd(), 'tmp', 'cookies.txt')
             # cookies_path = '/tmp/cookies.txt'
 
+            # Get cookies from Chrome (you can change to firefox(), edge(), etc.)
+            cj = browser_cookie3.chrome()
+
             source_path = os.path.join(os.path.dirname(__file__), 'cookies.txt')  # inside project
             cookies_path = '/tmp/cookies.txt'  # writable during runtime
-            shutil.copyfile(source_path, cookies_path)
+
+            # Save to cookies.txt
+            cj.save(cookies_path, ignore_discard=True, ignore_expires=True)
+
+            # shutil.copyfile(source_path, cookies_path)
 
             # Check if the cookies file exists
             '''
