@@ -13,7 +13,9 @@ from yt_dlp import YoutubeDL  # Import yt-dlp's YoutubeDL class
 
 # After probing, filter out duplicate vp9_codec + resolution entries
 seen_codecs = set()
+seen_codecs2 = set()
 vp9_formats = []
+unique_results = []
 
 def probe_with_ffprobe(stream_url, ffprobe_path="ffprobe"):
     try:
@@ -227,6 +229,17 @@ class handler(BaseHTTPRequestHandler):
                 # Run probing concurrently
                 with concurrent.futures.ThreadPoolExecutor(max_workers) as executor:
                     ffprobe_results = list(executor.map(probe_format, vp9_formats))
+
+                for result in ffprobe_results:
+                    if not result:
+                        continue
+                    codec = result.get("vp9_codec")
+                    if not codec:
+                        continue
+                    if codec in seen_codecs2:
+                        continue  # Skip duplicates
+                    seen_codecs2.add(codec)
+                    unique_results.append(result)
 
                 # Return everything as JSON
                 return self._send_json(200, {
