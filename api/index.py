@@ -11,6 +11,9 @@ import concurrent.futures
 import yt_dlp
 from yt_dlp import YoutubeDL  # Import yt-dlp's YoutubeDL class
 
+# After probing, filter out duplicate vp9_codec + resolution entries
+seen_codecs = set()
+vp9_formats = []
 
 def probe_with_ffprobe(stream_url, ffprobe_path="ffprobe"):
     try:
@@ -138,7 +141,7 @@ class handler(BaseHTTPRequestHandler):
             # yt-dlp options with cookies
 
             # Limit how many formats we probe to save time
-            MAX_VP9_PROBES = 8
+            # MAX_VP9_PROBES = 5
             
             ydl_opts = {
                 'dump_single_json': True,
@@ -163,12 +166,31 @@ class handler(BaseHTTPRequestHandler):
                     if f.get('url') and f.get('vcodec', '').lower().startswith('vp9')
                 ]
                 '''
-
+                '''
                 # Only consider VP9 formats with direct URLs
                 vp9_formats = [
                     f for f in formats
                     if f.get('url') and f.get('vcodec', '').lower().startswith('vp9')
-                ][:MAX_VP9_PROBES]  # Limit to 2 formats max
+                ][:MAX_VP9_PROBES]  # Limit to _ formats max
+                '''
+
+                for f in formats:
+                    vcodec = f.get('vcodec', '').lower()
+                    if not f.get('url') or not vcodec.startswith('vp9'):
+                        continue
+
+                    # Estimate a unique VP9 codec signature **before probing** based on yt-dlp metadata
+                    # If yt-dlp exposes `height`, `profile`, or `pix_fmt`, use them to help avoid duplicates
+                    width = f.get("width")
+                    height = f.get("height")
+                    ext = f.get("ext")
+                    signature = (vcodec, width, height, ext)  # Best-effort early de-dupe
+
+                    if signature in seen_codecs:
+                        continue
+
+                    seen_codecs.add(signature)
+                    vp9_formats.append(f)
 
                 ffprobe_results = []
 
