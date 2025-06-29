@@ -136,6 +136,9 @@ class handler(BaseHTTPRequestHandler):
             ffprobe_path = os.path.join(os.path.dirname(__file__), '..', 'vercel', 'path0', 'bin', 'ffprobe') 
 
             # yt-dlp options with cookies
+
+            # Limit how many formats we probe to save time
+            MAX_VP9_PROBES = 2
             
             ydl_opts = {
                 'dump_single_json': True,
@@ -144,6 +147,8 @@ class handler(BaseHTTPRequestHandler):
                 'cachedir': False,  # 👈 disables caching to avoid read-only filesystem issues
                 'ffmpeg_location': ffmpeg_path,  # 🔥 this is the key line
                 # 'format': 'bestvideo[protocol^=m3u8]+bestaudio/best[protocol^=m3u8]/best'
+                'quiet': True,
+                'no_warnings': True
             }
 
             with YoutubeDL(ydl_opts) as ydl:
@@ -152,10 +157,18 @@ class handler(BaseHTTPRequestHandler):
                 formats = info.get('formats', [])
 
                 # Filter formats to only those with VP9 or VP9.x codecs
+                '''
                 vp9_formats = [
                     f for f in formats
                     if f.get('url') and f.get('vcodec', '').lower().startswith('vp9')
                 ]
+                '''
+
+                # Only consider VP9 formats with direct URLs
+                vp9_formats = [
+                    f for f in formats
+                    if f.get('url') and f.get('vcodec', '').lower().startswith('vp9')
+                ][:MAX_VP9_PROBES]  # Limit to 2 formats max
 
                 ffprobe_results = []
 
