@@ -138,7 +138,7 @@ class handler(BaseHTTPRequestHandler):
             # yt-dlp options with cookies
 
             # Limit how many formats we probe to save time
-            MAX_VP9_PROBES = 5
+            MAX_VP9_PROBES = 8
             
             ydl_opts = {
                 'dump_single_json': True,
