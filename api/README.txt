@@ -1,1 +1,0 @@
-AUTOMATION of cookie(s) extraction (YouTube specific) not possible due to security. Change cookies.txt file from personal YouTube user profile (web) regularly to test API.
