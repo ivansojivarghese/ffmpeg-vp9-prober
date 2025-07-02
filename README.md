@@ -1,4 +1,4 @@
-# 📦 ffmpeg-vp9-prober (Simple Usage)
+# 📦 ffmpeg-vp9-prober 
 
 A minimal guide to run the VP9 codec probing API.
 
@@ -28,10 +28,10 @@ pip install -r requirements.txt  # Make sure yt-dlp is included
 ```bash
 curl -X POST https://ffmpeg-theta.vercel.app/api/index \
   -H "Content-Type: application/json" \
-  -d "{\"url\": \"https://www.youtube.com/watch?v=VISDGlpX0WI\"}"
+  -d "{\"url\": \"YOUTUBE_VIDEO_URL\"}"
 ```
 
-📌 Replace the `url` value with the YouTube URL of any specific video.
+📌 Replace the `YOUTUBE_VIDEO_URL` value with the YouTube URL of any specific video.
 
 ---
 
@@ -52,3 +52,15 @@ Example:
   ]
 }
 ```
+
+## Debug Manually with yt-dlp
+
+You can also manually inspect available formats from any YouTube video using the following command:
+
+```bash
+yt-dlp -F "[YOUTUBE_VIDEO_URL]"
+```
+
+This will print a list of all available formats including resolution, codec, and format IDs.
+
+
